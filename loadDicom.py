@@ -29,10 +29,10 @@ def loadDicom(self):
     fileName = QFileDialog.getOpenFileName()
     print(fileName[0])
     dataset = pydicom.dcmread(fileName[0])
-    img=qimage2ndarray.array2qimage(dataset.pixel_array)
+    img=qimage2ndarray.array2qimage(dataset.pixel_array.astype(np.uint8))
     #qimg = QtGui.QImage(dataset.pixel_array)
     #img2 = dataset.pixel_array.astype(np.int32)
-    
+    pydicom.readRa
     
     #myImg = qwt.toqimage.array_to_qimage(dataset.pixel_array)
     pixmap = QtGui.QPixmap(img)

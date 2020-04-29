@@ -17,6 +17,12 @@ import pydicom
 import qimage2ndarray
 import  numpy as np
 import qwt
+from skimage.color import lab2rgb, lch2lab, rgb2gray
+from pydicom.pixel_data_handlers.util import apply_voi_lut
+import  cv2
+import  os
+from PyQt5.QtWidgets import QMessageBox 
+
 
 
 class Ui_Dialog(object):
@@ -83,6 +89,9 @@ class Ui_Dialog(object):
         self.pushButton.setGeometry(QtCore.QRect(540, 450, 111, 41))
         self.pushButton.setObjectName("pushButton")
         self.Upload_bott.clicked.connect(self.loadDicom)
+        self.cnvJPG.clicked.connect(self.savePNG)
+
+        self.count = 0
 
 
 
@@ -122,28 +131,40 @@ class Ui_Dialog(object):
 
 
     def loadDicom(self):
-        fileName = QFileDialog.getOpenFileName()
-        print(fileName[0])
-        dataset = pydicom.dcmread(fileName[0])
-        img=qimage2ndarray.array2qimage(dataset.pixel_array)
-        print(type(dataset.PatientName))
         
-        self.infoTable.setItem(0, 0, QtWidgets.QTableWidgetItem(str(dataset.PatientName)))
-        self.infoTable.setItem(0, 1, QtWidgets.QTableWidgetItem(str(dataset.PatientID)))
-        self.infoTable.setItem(0, 2, QtWidgets.QTableWidgetItem(str(dataset.PatientBirthDate)))
-        self.infoTable.setItem(0, 3, QtWidgets.QTableWidgetItem(str(dataset.StudyID)))
-        self.infoTable.setItem(0, 4, QtWidgets.QTableWidgetItem(str(dataset.StudyDate)))
-        self.infoTable.setItem(0, 5, QtWidgets.QTableWidgetItem(str(dataset.SliceLocation)))
-        self.infoTable.setItem(0, 6, QtWidgets.QTableWidgetItem(str(dataset.InstanceNumber)))
+        # open browse dialog 
+        fileName = QFileDialog.getOpenFileName()
+        
+        # load dicom file
+        self.dataset = pydicom.dcmread(fileName[0])
+        
+        # normalize the image to darken the dicom slice image
+        self.imginit = self.dataset.pixel_array
+        self.threshold = 500 # Adjust as needed
+        self.image_2d_scaled = (np.maximum(self.imginit, 0) / (np.amax(self.imginit) + self.threshold)) * 255.0 
+        self.img=qimage2ndarray.array2qimage(self.image_2d_scaled)
+        
+        #write on table, Patient info 
+        self.infoTable.setItem(0, 0, QtWidgets.QTableWidgetItem(str(self.dataset.PatientName)))
+        self.infoTable.setItem(0, 1, QtWidgets.QTableWidgetItem(str(self.dataset.PatientID)))
+        self.infoTable.setItem(0, 2, QtWidgets.QTableWidgetItem(str(self.dataset.PatientBirthDate)))
+        self.infoTable.setItem(0, 3, QtWidgets.QTableWidgetItem(str(self.dataset.StudyID)))
+        self.infoTable.setItem(0, 4, QtWidgets.QTableWidgetItem(str(self.dataset.StudyDate)))
+        self.infoTable.setItem(0, 5, QtWidgets.QTableWidgetItem(str(self.dataset.SliceLocation)))
+        self.infoTable.setItem(0, 6, QtWidgets.QTableWidgetItem(str(self.dataset.InstanceNumber)))
 
+        # add the image to label     
+        self.pixmap = QtGui.QPixmap(self.img)    
+        self.imageTest.setPixmap(self.pixmap.scaled(self.imageTest.width(),self.imageTest.height()))
 
+    def savePNG(self):
+        msg = QMessageBox()
 
-   
-        pixmap = QtGui.QPixmap(img)
-        print('ttttt',self.imageTest.width())
+        self.path = './Dicom_Slices'
+        cv2.imwrite(os.path.join(self.path,'testImage{0}.jpg'.format(self.count)), self.image_2d_scaled) 
+        self.count += 1
     
-        self.imageTest.setPixmap(pixmap.scaled(self.imageTest.width(),self.imageTest.height()))
-
+        
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
