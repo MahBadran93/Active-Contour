@@ -156,6 +156,13 @@ class Ui_Dialog(object):
         # open browse dialog 
         fileName = QFileDialog.getOpenFileName()
         
+        #empty the list of coords each load of new DICOM image
+        self.countCoords = 0
+        
+        self.listOfCoords1.clear()
+        self.listOfCoords2.clear()
+        self.listOfCoords3.clear()
+        
         # load dicom file
         self.dataset = pydicom.dcmread(fileName[0])
         
@@ -236,40 +243,45 @@ class Ui_Dialog(object):
         self.countCoords += 1
         
     def savePNG(self):
-        # pop up message to check image is saved
-        self.msg.setWindowTitle("Save To JPG ")
-        self.msg.setInformativeText('Image has been Saved.')
-        self.msg.exec()
-        self.path = './Dicom_Slices'
-        # Save Dicom MRI image to file 
-        cv2.imwrite(os.path.join(self.path,'testImage{0}.jpg'.format(self.count)), self.image_2d_scaled) 
-        
-           
-        # normalize the labeled image
-        self.qImg = self.pixmap.toImage()
-        
-        #s = self.qImg.bits().asstring((self.imageTest.width * self.imageTest.height) * channels_count)
-        #arr = np.fromstring(s, dtype=np.uint8).reshape((self.imageTest.height, self.imageTest.width, channels_count))
-        self.labeledImg = qimage2ndarray.recarray_view(self.qImg)
-        self.threshold = 500 # Adjust as needed
-        #self.imgLabeledScaled = (np.maximum(self.labeledImg, 0) / (np.amax(self.labeledImg) + self.threshold)) * 255.0 
-        #print('shape2' , self.labeledImg.shape , type(self.labeledImg))
-        #cv2.imwrite(os.path.join(self.path,'testImageLabeled{0}.jpg'.format(self.count)), np.array(self.qImg)) 
-        #plt.imshow(self.labeledImg)
-        #plt.show()
-        #self.count += 1
-        #x1 = [p[0,i] for p in self.listOfCoords[i]]
-        #y1 = [p[1] for p in self.listOfCoords[i]]
-        ss1 = np.array(self.listOfCoords1)
-        ss2 = np.array(self.listOfCoords2)
-        ss3 = np.array(self.listOfCoords3)
-        plt.imshow(self.imginit)
-        #print(self.listOfCoords)
-        #print(ss[:,0])
-        plt.plot(ss1[:,0],ss1[:,1],'r')
-        plt.plot(ss2[:,0],ss2[:,1],'r')
-        plt.plot(ss3[:,0],ss3[:,1],'r')
-        plt.show()
+        if(self.countCoords != 3 ):
+            self.msg.setWindowTitle("Warning")
+            self.msg.setInformativeText('3 segmented objects needed!')
+            self.msg.exec()
+        else:
+            # pop up message to check image is saved
+            self.msg.setWindowTitle("Save To JPG ")
+            self.msg.setInformativeText('Image has been Saved.')
+            self.msg.exec()
+            self.path = './Dicom_Slices'
+            # Save Dicom MRI image to file 
+            cv2.imwrite(os.path.join(self.path,'testImage{0}.jpg'.format(self.count)), self.image_2d_scaled) 
+            
+               
+            # normalize the labeled image
+            self.qImg = self.pixmap.toImage()
+            
+            #s = self.qImg.bits().asstring((self.imageTest.width * self.imageTest.height) * channels_count)
+            #arr = np.fromstring(s, dtype=np.uint8).reshape((self.imageTest.height, self.imageTest.width, channels_count))
+            self.labeledImg = qimage2ndarray.recarray_view(self.qImg)
+            self.threshold = 500 # Adjust as needed
+            #self.imgLabeledScaled = (np.maximum(self.labeledImg, 0) / (np.amax(self.labeledImg) + self.threshold)) * 255.0 
+            #print('shape2' , self.labeledImg.shape , type(self.labeledImg))
+            #cv2.imwrite(os.path.join(self.path,'testImageLabeled{0}.jpg'.format(self.count)), np.array(self.qImg)) 
+            #plt.imshow(self.labeledImg)
+            #plt.show()
+            #self.count += 1
+            #x1 = [p[0,i] for p in self.listOfCoords[i]]
+            #y1 = [p[1] for p in self.listOfCoords[i]]
+            ss1 = np.array(self.listOfCoords1)
+            ss2 = np.array(self.listOfCoords2)
+            ss3 = np.array(self.listOfCoords3)
+            plt.imshow(self.imginit)
+            #print(self.listOfCoords)
+            #print(ss[:,0])
+            plt.plot(ss1[:,0],ss1[:,1],'r')
+            plt.plot(ss2[:,0],ss2[:,1],'r')
+            plt.plot(ss3[:,0],ss3[:,1],'r')
+            plt.show()
     
         
 if __name__ == "__main__":
