@@ -28,6 +28,15 @@ from skimage.draw import polygon, line, set_color
 
 
 
+from skimage.color import rgb2gray
+from skimage.filters import gaussian
+from skimage.segmentation import active_contour
+from skimage import data
+
+from shapely.geometry import Polygon
+
+
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
@@ -36,7 +45,7 @@ class Ui_Dialog(object):
         self.label.setGeometry(QtCore.QRect(10, 20, 71, 16))
         self.label.setObjectName("label")
         self.segmetLabel = QtWidgets.QLabel(Dialog)
-        self.segmetLabel.setGeometry(QtCore.QRect(470, 40, 384, 308))
+        self.segmetLabel.setGeometry(QtCore.QRect(479, 40, 384, 308))
         self.segmetLabel.setStyleSheet("background-color: white; border: 1px inset grey; min-height: 200px;")
 
         self.segmetLabel.setObjectName("segmetLabel")
@@ -44,7 +53,7 @@ class Ui_Dialog(object):
         self.Upload_bott.setGeometry(QtCore.QRect(120, 15, 101, 23))
         self.Upload_bott.setObjectName("Upload_bott")
         self.Segment_bott = QtWidgets.QPushButton(Dialog)
-        self.Segment_bott.setGeometry(QtCore.QRect(384, 200, 80, 23))
+        self.Segment_bott.setGeometry(QtCore.QRect(392, 380, 80, 23))
         self.Segment_bott.setObjectName("Segment_bott")
         self.label_2 = QtWidgets.QLabel(Dialog)
         self.label_2.setGeometry(QtCore.QRect(500, 20, 151, 16))
@@ -97,8 +106,22 @@ class Ui_Dialog(object):
         self.pushButton = QtWidgets.QPushButton(Dialog)
         self.pushButton.setGeometry(QtCore.QRect(540, 450, 111, 41))
         self.pushButton.setObjectName("pushButton")
+        self.alpha = QtWidgets.QDoubleSpinBox(Dialog)
+        self.alpha.setGeometry(QtCore.QRect(500, 380, 80, 23))
+        self.alpha.setObjectName("alpha")
+        self.beta = QtWidgets.QDoubleSpinBox(Dialog)
+        self.beta.setGeometry(QtCore.QRect(500, 450, 80, 23))
+        self.beta.setObjectName("beta")
+        self.gama = QtWidgets.QDoubleSpinBox(Dialog)
+        self.gama.setGeometry(QtCore.QRect(500, 500, 80, 23))
+        self.gama.setObjectName("gama")
+        
+    
+        
         self.Upload_bott.clicked.connect(self.loadDicom)
         self.cnvJPG.clicked.connect(self.savePNG)
+        self.Segment_bott.clicked.connect(self.active_contour)
+
 
         
         self.count = 0
@@ -110,14 +133,15 @@ class Ui_Dialog(object):
         self.listOfCoords1 = []
         self.listOfCoords2 = []
         self.listOfCoords3 = []
-
-
-
-
-
+        
+        self.ss1=0
+        self.imginit=0
         
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
+        
+        
+        
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
@@ -148,6 +172,8 @@ class Ui_Dialog(object):
         self.jpgSaveLabel.setText(_translate("Dialog", "save to JPG"))
         self.label_3.setText(_translate("Dialog", "save to Dicom"))
         self.pushButton.setText(_translate("Dialog", "Save anonymized"))
+       
+
 
 
 
@@ -166,7 +192,6 @@ class Ui_Dialog(object):
         
         # load dicom file
         self.dataset = pydicom.dcmread(fileName[0])
-        
         # normalize the image to darken the dicom slice image
         self.imginit = self.dataset.pixel_array
         print('shape',self.imginit.shape, type(self.imginit) , self.imginit.dtype)
@@ -189,7 +214,10 @@ class Ui_Dialog(object):
         self.imageTest.setPixmap(self.pixmap.scaled(self.imageTest.width(),self.imageTest.height()))
         self.imageTest.mouseMoveEvent = self.drawMove
         
+        
 
+        
+        
 
     
     def drawMove(self, e):
@@ -268,21 +296,93 @@ class Ui_Dialog(object):
             #self.imgLabeledScaled = (np.maximum(self.labeledImg, 0) / (np.amax(self.labeledImg) + self.threshold)) * 255.0 
             #print('shape2' , self.labeledImg.shape , type(self.labeledImg))
             #cv2.imwrite(os.path.join(self.path,'testImageLabeled{0}.jpg'.format(self.count)), np.array(self.qImg)) 
-            ss1 = np.array(self.listOfCoords1)
-            ss2 = np.array(self.listOfCoords2)
-            ss3 = np.array(self.listOfCoords3)
+            self.ss1 = np.array(self.listOfCoords1)
+            self.ss2 = np.array(self.listOfCoords2)
+            self.ss3 = np.array(self.listOfCoords3)
             #plt.imshow(self.imginit)
             
             #plt.plot(ss1[:,0],ss1[:,1],'r')
             #plt.plot(ss2[:,0],ss2[:,1],'r')
             #plt.plot(ss3[:,0],ss3[:,1],'r')
             
+            #poly1 = Polygon([p[0],p[1]] for p in self.ss1)
+            #self.x1,self.y1 = poly1.convex_hull.exterior.coords.xy
+            
+            #poly2 = Polygon([p[0],p[1]] for p in self.ss2)
+            #self.x2,self.y2 = poly2.convex_hull.exterior.coords.xy
+            
+            #poly3 = Polygon([p[0],p[1]] for p in self.ss3)
+            #self.x3,self.y3 = poly3.convex_hull.exterior.coords.xy
+            
+            
+            plt.plot(self.ss1[:,0],self.ss1[:,1],'r')
+            plt.plot(self.ss2[:,0],self.ss2[:,1],'r')
+
+            plt.plot(self.ss3[:,0],self.ss3[:,1],'r')
+
             self.img = np.zeros((308, 384), dtype=np.uint8)
-            set_color(self.imginit, (ss1[:,1],ss1[:,0]), 1)
+            set_color(self.imginit, (self.ss1[:,1],self.ss1[:,0]), 1)
             plt.imshow(self.imginit)
             plt.show()
             
+         
+            
+            
+    def active_contour(self):
+        img = rgb2gray(self.image_2d_scaled)
+        alpha=self.alpha.value()
+        beta=self.beta.value()
+        gamma=self.gama.value()
+
+        
+        init1 = np.array([self.ss1[:,0],self.ss1[:,1]]).T
+        init2 = np.array([self.ss2[:,0],self.ss2[:,1]]).T
+
+        init3 = np.array([self.ss3[:,0],self.ss3[:,1]]).T
+        
     
+        '''  ..
+        (image, snake, alpha=0.01, beta=0.1,
+                   w_line=0, w_edge=1, gamma=0.01,
+                   bc=None, max_px_move=1.0,
+                   max_iterations=2500, convergence=0.1,
+                   *,
+                   boundary_condition='periodic',
+                   coordinates=None):
+            
+        '''
+     
+        snake1 = active_contour(gaussian(img, 3),
+                               init1, alpha, beta,gamma,max_iterations=4000,  
+                               coordinates='rc')
+        
+        
+        snake2 = active_contour(gaussian(img, 3),
+                               init2, alpha, beta,gamma,max_iterations=4000,  
+                               coordinates='rc')
+        snake3 = active_contour(gaussian(img, 3),
+                               init3, alpha, beta,gamma,max_iterations=4000,  
+                               coordinates='rc')
+        
+        
+        fig, ax = plt.subplots(figsize=(7, 7))
+        ax.imshow(img, cmap=plt.cm.gray)
+        ax.plot(init1[:, 0], init1[:, 1], '-r', lw=3)
+        ax.plot(snake1[:, 0], snake1[:, 1], '-b', lw=3)
+        ax.plot(init2[:, 0], init2[:, 1], '-r', lw=3)
+        ax.plot(snake2[:, 0], snake2[:, 1], '-b', lw=3)
+        ax.plot(init3[:, 0], init3[:, 1], '-r', lw=3)
+        ax.plot(snake3[:, 0], snake3[:, 1], '-b', lw=3)
+        ax.set_xticks([]), ax.set_yticks([])
+        ax.axis([0, img.shape[1], img.shape[0], 0])
+        
+        plt.show()
+        
+        
+        
+                            
+                
+
         
 if __name__ == "__main__":
     import sys
