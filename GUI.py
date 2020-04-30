@@ -24,6 +24,7 @@ import  os
 from PyQt5.QtWidgets import QMessageBox, QDialogButtonBox
 from numpy.lib import recfunctions as rfn
 import  pandas as pd
+from skimage.draw import polygon, line, set_color
 
 
 
@@ -267,21 +268,20 @@ class Ui_Dialog(object):
             #self.imgLabeledScaled = (np.maximum(self.labeledImg, 0) / (np.amax(self.labeledImg) + self.threshold)) * 255.0 
             #print('shape2' , self.labeledImg.shape , type(self.labeledImg))
             #cv2.imwrite(os.path.join(self.path,'testImageLabeled{0}.jpg'.format(self.count)), np.array(self.qImg)) 
-            #plt.imshow(self.labeledImg)
-            #plt.show()
-            #self.count += 1
-            #x1 = [p[0,i] for p in self.listOfCoords[i]]
-            #y1 = [p[1] for p in self.listOfCoords[i]]
             ss1 = np.array(self.listOfCoords1)
             ss2 = np.array(self.listOfCoords2)
             ss3 = np.array(self.listOfCoords3)
+            #plt.imshow(self.imginit)
+            
+            #plt.plot(ss1[:,0],ss1[:,1],'r')
+            #plt.plot(ss2[:,0],ss2[:,1],'r')
+            #plt.plot(ss3[:,0],ss3[:,1],'r')
+            
+            self.img = np.zeros((308, 384), dtype=np.uint8)
+            set_color(self.imginit, (ss1[:,1],ss1[:,0]), 1)
             plt.imshow(self.imginit)
-            #print(self.listOfCoords)
-            #print(ss[:,0])
-            plt.plot(ss1[:,0],ss1[:,1],'r')
-            plt.plot(ss2[:,0],ss2[:,1],'r')
-            plt.plot(ss3[:,0],ss3[:,1],'r')
             plt.show()
+            
     
         
 if __name__ == "__main__":
