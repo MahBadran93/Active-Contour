@@ -104,7 +104,13 @@ class Ui_Dialog(object):
         self.msg = QtWidgets.QMessageBox()
         self.last_x, self.last_y = None, None
         self.apt = 0
-        self.listOfCoords = []
+        
+        self.countCoords = 0
+        self.listOfCoords1 = []
+        self.listOfCoords2 = []
+        self.listOfCoords3 = []
+
+
 
 
 
@@ -200,7 +206,14 @@ class Ui_Dialog(object):
         print(self.last_x, self.last_y)
         
         # Save the manual segmented coordinates to list 
-        self.listOfCoords.append([self.last_x,self.last_y])
+        if(self.countCoords == 0):
+            self.listOfCoords1.append([self.last_x,self.last_y])
+            
+        if(self.countCoords == 1):
+            self.listOfCoords2.append([self.last_x,self.last_y])
+            
+        if(self.countCoords == 2):
+            self.listOfCoords3.append([self.last_x,self.last_y])    
         
         # release mouse 
         self.imageTest.mouseReleaseEvent = self.release
@@ -220,7 +233,8 @@ class Ui_Dialog(object):
     def release(self, e):
         self.last_x = None
         self.last_y = None
-
+        self.countCoords += 1
+        
     def savePNG(self):
         # pop up message to check image is saved
         self.msg.setWindowTitle("Save To JPG ")
@@ -246,11 +260,15 @@ class Ui_Dialog(object):
         #self.count += 1
         #x1 = [p[0,i] for p in self.listOfCoords[i]]
         #y1 = [p[1] for p in self.listOfCoords[i]]
-        ss = np.array(self.listOfCoords)
+        ss1 = np.array(self.listOfCoords1)
+        ss2 = np.array(self.listOfCoords2)
+        ss3 = np.array(self.listOfCoords3)
         plt.imshow(self.imginit)
         #print(self.listOfCoords)
         #print(ss[:,0])
-        plt.plot(ss[:,0],ss[:,1],'r')
+        plt.plot(ss1[:,0],ss1[:,1],'r')
+        plt.plot(ss2[:,0],ss2[:,1],'r')
+        plt.plot(ss3[:,0],ss3[:,1],'r')
         plt.show()
     
         
