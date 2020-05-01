@@ -53,7 +53,7 @@ class Ui_Dialog(object):
         self.Upload_bott.setGeometry(QtCore.QRect(120, 15, 101, 23))
         self.Upload_bott.setObjectName("Upload_bott")
         self.Segment_bott = QtWidgets.QPushButton(Dialog)
-        self.Segment_bott.setGeometry(QtCore.QRect(392, 380, 80, 23))
+        self.Segment_bott.setGeometry(QtCore.QRect(350, 380, 80, 23))
         self.Segment_bott.setObjectName("Segment_bott")
         self.label_2 = QtWidgets.QLabel(Dialog)
         self.label_2.setGeometry(QtCore.QRect(500, 20, 151, 16))
@@ -91,31 +91,53 @@ class Ui_Dialog(object):
         self.infoLabel = QtWidgets.QLabel(Dialog)
         self.infoLabel.setGeometry(QtCore.QRect(10, 430, 121, 16))
         self.infoLabel.setObjectName("infoLabel")
+        #####################################################
         self.cnvJPG = QtWidgets.QPushButton(Dialog)
-        self.cnvJPG.setGeometry(QtCore.QRect(220, 380, 80, 23))
+        self.cnvJPG.setGeometry(QtCore.QRect(250, 380, 80, 23))
         self.cnvJPG.setObjectName("cnvJPG")
         self.cnvDicom = QtWidgets.QPushButton(Dialog)
-        self.cnvDicom.setGeometry(QtCore.QRect(100, 380, 80, 23))
+        self.cnvDicom.setGeometry(QtCore.QRect(160, 380, 80, 23))
         self.cnvDicom.setObjectName("cnvDicom")
+        self.Save_anonymized = QtWidgets.QPushButton(Dialog)
+        self.Save_anonymized.setGeometry(QtCore.QRect(20, 380, 130, 23))
+        self.Save_anonymized.setObjectName("Save anonymized")
+        #############################################
         self.jpgSaveLabel = QtWidgets.QLabel(Dialog)
-        self.jpgSaveLabel.setGeometry(QtCore.QRect(220, 360, 71, 20))
+        self.jpgSaveLabel.setGeometry(QtCore.QRect(250, 360, 71, 23))
         self.jpgSaveLabel.setObjectName("jpgSaveLabel")
         self.label_3 = QtWidgets.QLabel(Dialog)
-        self.label_3.setGeometry(QtCore.QRect(100, 360, 91, 20))
+        self.label_3.setGeometry(QtCore.QRect(150, 360, 91, 23))
         self.label_3.setObjectName("label_3")
-        self.pushButton = QtWidgets.QPushButton(Dialog)
-        self.pushButton.setGeometry(QtCore.QRect(540, 450, 111, 41))
-        self.pushButton.setObjectName("pushButton")
+        self.label_4 = QtWidgets.QLabel(Dialog)
+        self.label_4.setGeometry(QtCore.QRect(50, 360, 80, 23))
+        self.label_4.setObjectName("anonymized")
+        
         self.alpha = QtWidgets.QDoubleSpinBox(Dialog)
-        self.alpha.setGeometry(QtCore.QRect(500, 380, 80, 23))
+        self.alpha.setGeometry(QtCore.QRect(550, 380, 80, 23))
         self.alpha.setObjectName("alpha")
         self.beta = QtWidgets.QDoubleSpinBox(Dialog)
-        self.beta.setGeometry(QtCore.QRect(500, 450, 80, 23))
+        self.beta.setGeometry(QtCore.QRect(550, 420, 80, 23))
         self.beta.setObjectName("beta")
         self.gama = QtWidgets.QDoubleSpinBox(Dialog)
-        self.gama.setGeometry(QtCore.QRect(500, 500, 80, 23))
+        self.gama.setGeometry(QtCore.QRect(550, 460, 80, 23))
         self.gama.setObjectName("gama")
         
+        self.alpha_label = QtWidgets.QLabel(Dialog)
+        self.alpha_label.setGeometry(QtCore.QRect(500, 380, 80, 23))
+
+        self.beta_label = QtWidgets.QLabel(Dialog)
+        self.beta_label.setGeometry(QtCore.QRect(500, 420, 80, 23))
+
+        self.gamm_label = QtWidgets.QLabel(Dialog)
+        self.gamm_label.setGeometry(QtCore.QRect(500, 460, 80, 23))
+
+       
+      
+        
+     #   self.labelLeft.move(80, 40)
+      #  self.labelRight.move(80, 80)
+       # self.labelCenter.move(80, 120)    
+
     
         
         self.Upload_bott.clicked.connect(self.loadDicom)
@@ -171,7 +193,12 @@ class Ui_Dialog(object):
         self.cnvDicom.setText(_translate("Dialog", "DICOM"))
         self.jpgSaveLabel.setText(_translate("Dialog", "save to JPG"))
         self.label_3.setText(_translate("Dialog", "save to Dicom"))
-        self.pushButton.setText(_translate("Dialog", "Save anonymized"))
+        self.label_4.setText(_translate("Dialog", "anonymize"))
+
+        self.Save_anonymized.setText(_translate("Dialog", "Save anonymized"))
+        self.alpha_label.setText('alpha')
+        self.beta_label.setText('beta')
+        self.gamm_label.setText('gamma')
        
 
 
@@ -325,6 +352,8 @@ class Ui_Dialog(object):
             plt.imshow(self.imginit)
             plt.show()
             
+            
+    
          
             
             
@@ -352,17 +381,17 @@ class Ui_Dialog(object):
             
         '''
      
-        snake1 = active_contour(gaussian(img, 3),
-                               init1, alpha, beta,gamma,max_iterations=4000,  
+        snake1 = active_contour(gaussian(img, 1),
+                               init1, alpha, beta,gamma,max_iterations=5000,  
                                coordinates='rc')
         
         
         snake2 = active_contour(gaussian(img, 3),
-                               init2, alpha, beta,gamma,max_iterations=4000,  
-                               coordinates='rc')
+                                init2, alpha, beta,gamma,max_iterations=5000,  
+                                coordinates='rc')
         snake3 = active_contour(gaussian(img, 3),
-                               init3, alpha, beta,gamma,max_iterations=4000,  
-                               coordinates='rc')
+                                init3, alpha, beta,gamma,max_iterations=5000,  
+                                coordinates='rc')
         
         
         fig, ax = plt.subplots(figsize=(7, 7))
