@@ -381,7 +381,7 @@ class Ui_Dialog(object):
             self.ss4 = np.array(self.listOfCoords4)
             self.Segment_bott.setEnabled(True)
         
-    # this function activates when the user press JPG button, which saves the two images     
+    # this function activates when the user press JPG button, which saves the two images in folder Dicom_JPG  
     def savePNG(self):     
         self.path = './Dicom_JPG'
         # Save Dicom MRI image to file 
@@ -447,13 +447,19 @@ class Ui_Dialog(object):
         # x,y,z for 3D plotting 
         self.x1 = snake1[:,0] 
         self.y1 = snake1[:,1] 
+        self.z1 = np.ones(snake1.shape[0])
+
         self.x2 = snake2[:,0] 
         self.y2 = snake2[:,1] 
+        self.z2 = np.ones(snake2.shape[0])
+
         self.x3 = snake3[:,0] 
         self.y3 = snake3[:,1] 
+        self.z3 = np.ones(snake3.shape[0])
+
         self.x4 = snake4[:,0] 
-        self.y4 = snake3[:,1]
-        self.z = np.ones(snake1.shape[0]) * 5
+        self.y4 = snake4[:,1]
+        self.z4 = np.ones(snake4.shape[0])
                 
         
        
@@ -469,20 +475,24 @@ class Ui_Dialog(object):
         self.pixmap2 = QtGui.QPixmap(self.segmentedImg)    
         self.segmetLabel.setPixmap(self.pixmap2.scaled(self.imageTest.width(),self.imageTest.height()))
     
+    # Activate when press on plot 3D button to draw the 3D shapes 
     def draw3D(self):
         fig = plt.figure()
         ax = fig.gca(projection='3d')
-        ax.plot_trisurf(self.x, self.y, self.z, cmap = cm.jet)
+        surf = ax.plot_trisurf(self.x1, self.y1, self.z1)
         #ax.plot_trisurf(self.x1, self.y1, self.z, cmap = cm.cool)
-        # rotate the axes and update
+        surf2 = ax.plot_trisurf(self.x2, self.y2, self.z2)
+        surf3 = ax.plot_trisurf(self.x3, self.y3, self.z3)
+        surf3 = ax.plot_trisurf(self.x4, self.y4, self.z4)
         for angle in range(0, 360):
             ax.view_init(30, angle)
             plt.draw()
             plt.pause(.001)
-        
+            plt.show()
+        # rotate the axes and update
+
+    # Edit patient information and save to a Dicom file in folder DICOM_Anony     
     def Anonymize(self):
-        
-    
         data_elements = ['PatientID',
                          'PatientName'
                          'PatientBirthDate']
