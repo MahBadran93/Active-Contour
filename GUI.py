@@ -6,27 +6,31 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-
+#...........................Imported libraries..................
 from PyQt5 import QtCore, QtGui, QtWidgets
 import matplotlib.pyplot as plt
 import pydicom
 from pydicom.data import get_testdata_files,get_testdata_file
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog
 from pydicom.data import get_testdata_files,get_testdata_file
-import pydicom
 import qimage2ndarray
 import  numpy as np
 import qwt
 from skimage.color import lab2rgb, lch2lab, rgb2gray
-from pydicom.pixel_data_handlers.util import apply_voi_lut
+#from pydicom.pixel_data_handlers.util import apply_voi_lut
 import  cv2
 import  os
 from PyQt5.QtWidgets import QMessageBox, QDialogButtonBox
-from numpy.lib import recfunctions as rfn
+#from numpy.lib import recfunctions as rfn
 import  pandas as pd
 from skimage.draw import polygon, line, set_color
 import  PIL.Image as imgCnv
-
+from pydicom.dataset import Dataset, FileDataset
+# lib to draw 3D
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+#####################################################################
 
 
 from skimage.color import rgb2gray
@@ -39,9 +43,10 @@ from shapely.geometry import Polygon
 
 
 class Ui_Dialog(object):
+    
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(720, 540)
+        Dialog.resize(1500, 540)
         self.label = QtWidgets.QLabel(Dialog)
         self.label.setGeometry(QtCore.QRect(10, 20, 71, 16))
         self.label.setObjectName("label")
@@ -54,7 +59,7 @@ class Ui_Dialog(object):
         self.Upload_bott.setGeometry(QtCore.QRect(120, 15, 101, 23))
         self.Upload_bott.setObjectName("Upload_bott")
         self.Segment_bott = QtWidgets.QPushButton(Dialog)
-        self.Segment_bott.setGeometry(QtCore.QRect(395, 180, 80, 23))
+        self.Segment_bott.setGeometry(QtCore.QRect(395, 80, 80, 23))
         self.Segment_bott.setObjectName("Segment_bott")
         self.label_2 = QtWidgets.QLabel(Dialog)
         self.label_2.setGeometry(QtCore.QRect(500, 20, 151, 16))
@@ -66,36 +71,36 @@ class Ui_Dialog(object):
         self.imageTest.setText("")
         self.imageTest.setObjectName("imageTest")
         self.infoTable = QtWidgets.QTableWidget(Dialog)
-        self.infoTable.setGeometry(QtCore.QRect(10, 450, 300, 70))
+        self.infoTable.setGeometry(QtCore.QRect(900, 40, 230, 230))
         self.infoTable.setObjectName("infoTable")
-        self.infoTable.setColumnCount(7)
-        self.infoTable.setRowCount(1)
-        item = QtWidgets.QTableWidgetItem()
-        self.infoTable.setVerticalHeaderItem(0, item)
+        self.infoTable.setColumnCount(1)
+        self.infoTable.setRowCount(7)
         item = QtWidgets.QTableWidgetItem()
         self.infoTable.setHorizontalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
-        self.infoTable.setHorizontalHeaderItem(1, item)
+        self.infoTable.setVerticalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
-        self.infoTable.setHorizontalHeaderItem(2, item)
+        self.infoTable.setVerticalHeaderItem(1, item)
         item = QtWidgets.QTableWidgetItem()
-        self.infoTable.setHorizontalHeaderItem(3, item)
+        self.infoTable.setVerticalHeaderItem(2, item)
         item = QtWidgets.QTableWidgetItem()
-        self.infoTable.setHorizontalHeaderItem(4, item)
+        self.infoTable.setVerticalHeaderItem(3, item)
         item = QtWidgets.QTableWidgetItem()
-        self.infoTable.setHorizontalHeaderItem(5, item)
+        self.infoTable.setVerticalHeaderItem(4, item)
+        item = QtWidgets.QTableWidgetItem() 
+        self.infoTable.setVerticalHeaderItem(5, item)
         item = QtWidgets.QTableWidgetItem()
-        self.infoTable.setHorizontalHeaderItem(6, item)
+        self.infoTable.setVerticalHeaderItem(6, item)
         self.infoLabel = QtWidgets.QLabel(Dialog)
-        self.infoLabel.setGeometry(QtCore.QRect(10, 430, 121, 16))
+        self.infoLabel.setGeometry(QtCore.QRect(920, 20, 121, 16))
         self.infoLabel.setObjectName("infoLabel")
         #####################################################
         self.cnvJPG = QtWidgets.QPushButton(Dialog)
         self.cnvJPG.setGeometry(QtCore.QRect(250, 380, 80, 23))
         self.cnvJPG.setObjectName("cnvJPG")
-        self.cnvDicom = QtWidgets.QPushButton(Dialog)
-        self.cnvDicom.setGeometry(QtCore.QRect(160, 380, 80, 23))
-        self.cnvDicom.setObjectName("cnvDicom")
+        self.plt3D = QtWidgets.QPushButton(Dialog)
+        self.plt3D.setGeometry(QtCore.QRect(160, 380, 80, 23))
+        self.plt3D.setObjectName("plt3D")
         self.Save_anonymized = QtWidgets.QPushButton(Dialog)
         self.Save_anonymized.setGeometry(QtCore.QRect(20, 380, 130, 23))
         self.Save_anonymized.setObjectName("Save anonymized")
@@ -104,99 +109,110 @@ class Ui_Dialog(object):
         self.jpgSaveLabel.setGeometry(QtCore.QRect(250, 360, 71, 23))
         self.jpgSaveLabel.setObjectName("jpgSaveLabel")
         self.label_3 = QtWidgets.QLabel(Dialog)
-        self.label_3.setGeometry(QtCore.QRect(150, 360, 91, 23))
+        self.label_3.setGeometry(QtCore.QRect(185, 360, 91, 23))
         self.label_3.setObjectName("label_3")
         self.label_4 = QtWidgets.QLabel(Dialog)
         self.label_4.setGeometry(QtCore.QRect(50, 360, 80, 23))
         self.label_4.setObjectName("anonymized")
+
         
         self.alpha = QtWidgets.QDoubleSpinBox(Dialog)
-        self.alpha.setGeometry(QtCore.QRect(550, 380, 80, 23))
+        self.alpha.setGeometry(QtCore.QRect(395, 140, 80, 23))
         self.alpha.setObjectName("alpha")
+        self.alpha.setDecimals(5)
         self.beta = QtWidgets.QDoubleSpinBox(Dialog)
-        self.beta.setGeometry(QtCore.QRect(550, 420, 80, 23))
+        self.beta.setGeometry(QtCore.QRect(395, 200, 80, 23))
         self.beta.setObjectName("beta")
+        self.beta.setDecimals(5)
         self.gama = QtWidgets.QDoubleSpinBox(Dialog)
-        self.gama.setGeometry(QtCore.QRect(550, 460, 80, 23))
+        self.gama.setGeometry(QtCore.QRect(395, 260, 80, 23))
         self.gama.setObjectName("gama")
+        self.gama.setDecimals(5)
+
         
         self.alpha_label = QtWidgets.QLabel(Dialog)
-        self.alpha_label.setGeometry(QtCore.QRect(500, 380, 80, 23))
+        self.alpha_label.setGeometry(QtCore.QRect(395, 120, 80, 23))
 
         self.beta_label = QtWidgets.QLabel(Dialog)
-        self.beta_label.setGeometry(QtCore.QRect(500, 420, 80, 23))
+        self.beta_label.setGeometry(QtCore.QRect(395, 180, 80, 23))
 
         self.gamm_label = QtWidgets.QLabel(Dialog)
-        self.gamm_label.setGeometry(QtCore.QRect(500, 460, 80, 23))
+        self.gamm_label.setGeometry(QtCore.QRect(395, 240, 80, 23))
 
+        # Set background color 
         pal = QtGui.QPalette()
         pal.setColor(QtGui.QPalette.Background,QtGui.QColor(174, 173, 172));
         Dialog.autoFillBackground()
         Dialog.setPalette(pal)
         
-        self.Segment_bott.setEnabled(False)
-        self.cnvJPG.setEnabled(False)
-      
-        
-        #self.labelLeft.move(80, 40)
-        #self.labelRight.move(80, 80)
-        #self.labelCenter.move(80, 120)    
 
-    
-        
         self.Upload_bott.clicked.connect(self.loadDicom)
         self.cnvJPG.clicked.connect(self.savePNG)
         self.Segment_bott.clicked.connect(self.active_contour)
+        self.plt3D.clicked.connect(self.draw3D)
+        self.Save_anonymized.clicked.connect(self.Anonymize)
+
 
 
         
         self.msg = QtWidgets.QMessageBox()
+        
+        
+        # disable segment button until the user manually segment all the manual contours required 
+        self.Segment_bott.setEnabled(False)
+        
+        # disable save jpg button until the two images are loaded(test image and segmented image)
+        self.cnvJPG.setEnabled(False)
+        
+        # disable anonymized button until you loaded the test image.
+        self.Save_anonymized.setEnabled(False)
+        
+        # disable show 3D button
+        self.plt3D.setEnabled(False)
+
+     
+        
+        # initalise the x,y coordinates 
         self.last_x, self.last_y = None, None
-        self.apt = 0
-        
-        self.countCoords = 0
-        self.listOfCoords1 = []
-        self.listOfCoords2 = []
-        self.listOfCoords3 = []
-        
-        self.ss1=0
+
+        # initalise variable to hold the image of dicom file 
         self.imginit=0
-        self.flagLabelnotempty = 0
+        
+        #self.flagLabelnotempty = 0
         
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
         
         
-        
-
+    
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
         self.label.setText(_translate("Dialog", "MRI Image"))
-        self.Upload_bott.setText(_translate("Dialog", "Upload Image"))
+        self.Upload_bott.setText(_translate("Dialog", "Upload Dicom "))
         self.Segment_bott.setText(_translate("Dialog", "Segment"))
         self.label_2.setText(_translate("Dialog", "Segmented Image "))
+        #item = self.infoTable.horizontalHeaderItem(0)
+        #item.setText(_translate("Dialog", "results"))
         item = self.infoTable.verticalHeaderItem(0)
-        item.setText(_translate("Dialog", "results"))
-        item = self.infoTable.horizontalHeaderItem(0)
         item.setText(_translate("Dialog", "Name"))
-        item = self.infoTable.horizontalHeaderItem(1)
+        item = self.infoTable.verticalHeaderItem(1)
         item.setText(_translate("Dialog", "ID"))
-        item = self.infoTable.horizontalHeaderItem(2)
+        item = self.infoTable.verticalHeaderItem(2)
         item.setText(_translate("Dialog", "BirthDate"))
-        item = self.infoTable.horizontalHeaderItem(3)
+        item = self.infoTable.verticalHeaderItem(3)
         item.setText(_translate("Dialog", "StudyID"))
-        item = self.infoTable.horizontalHeaderItem(4)
+        item = self.infoTable.verticalHeaderItem(4)
         item.setText(_translate("Dialog", "StudyDate"))
-        item = self.infoTable.horizontalHeaderItem(5)
+        item = self.infoTable.verticalHeaderItem(5)
         item.setText(_translate("Dialog", "SliceLocation"))
-        item = self.infoTable.horizontalHeaderItem(6)
+        item = self.infoTable.verticalHeaderItem(6)
         item.setText(_translate("Dialog", "InstanceNumber"))
         self.infoLabel.setText(_translate("Dialog", "Patient Information "))
         self.cnvJPG.setText(_translate("Dialog", "JPG"))
-        self.cnvDicom.setText(_translate("Dialog", "DICOM"))
+        self.plt3D.setText(_translate("Dialog", "plot 3D"))
         self.jpgSaveLabel.setText(_translate("Dialog", "save to JPG"))
-        self.label_3.setText(_translate("Dialog", "save to Dicom"))
+        self.label_3.setText(_translate("Dialog", "Plot"))
         self.label_4.setText(_translate("Dialog", "anonymize"))
 
         self.Save_anonymized.setText(_translate("Dialog", "Save anonymized"))
@@ -210,6 +226,52 @@ class Ui_Dialog(object):
 
     # this function is used  to load dicom data   
     def loadDicom(self):
+        '''
+        
+        '''    
+        # disable segment button until the user manually segment all the manual contours required 
+        self.Segment_bott.setEnabled(False)
+        
+        # disable save jpg button until the two images are loaded(test image and segmented image)
+        self.cnvJPG.setEnabled(False)
+
+        # disable show 3d button
+        self.plt3D.setEnabled(False)
+
+        
+        # disable anonymized button until you loaded the test image.
+        self.Save_anonymized.setEnabled(False)
+     
+        # initalise the x,y coordinates 
+        self.last_x, self.last_y = None, None
+        
+        # initalize variables to hold numpy array of coordinates to plot 3D shape 
+        self.x, self.x1, self.x2 = [], [], []
+        self.y, self.y1, self.y2 = [], [], []
+        self.z = []
+        
+        # list of coordinates for each contour the user segmented. 
+        self.countCoords = 0 
+        self.listOfCoords1 = []
+        self.listOfCoords2 = []
+        self.listOfCoords3 = []
+        self.listOfCoords4 = []
+
+         
+        # Flags to not draw more that 3 contours 
+        self.countCoords = 0
+        
+        #self.flagLabelnotempty = 1
+        
+        
+        
+        # open browse dialog 
+        fileName = QFileDialog.getOpenFileName()
+        
+       
+        # when load the test image enable the save Save_anonymize button 
+        self.Save_anonymized.setEnabled(True)
+        
         # clear the label each time we load an image 
         self.segmetLabel.clear()
         self.imageTest.clear()
@@ -217,20 +279,10 @@ class Ui_Dialog(object):
         self.listOfCoords1.clear()
         self.listOfCoords2.clear()
         self.listOfCoords3.clear()
-        
-        # Flags to not draw more that 3 contours 
-        self.countCoords = 0
-        
-        self.flagLabelnotempty = 1
-        
-        # open browse dialog 
-        fileName = QFileDialog.getOpenFileName()
-        
-       
+        self.listOfCoords4.clear()
 
-        
-        
-        
+   
+
         # load dicom file
         self.dataset = pydicom.dcmread(fileName[0])
         # normalize the image to darken the dicom slice image
@@ -253,10 +305,18 @@ class Ui_Dialog(object):
         self.pixmap = QtGui.QPixmap(self.img)    
         self.imageTest.setPixmap(self.pixmap.scaled(self.imageTest.width(),self.imageTest.height()))
         self.imageTest.mouseMoveEvent = self.drawMove
-            
+        #information Message
+        self.msg.setWindowTitle("Informations")
+        self.msg.setInformativeText('You can draw on the image for manual segmetation of the tumor, TZ, CZ,PZ by moving the mouse around the object. Only 4 objects are allowed to segment or you cant continue. You can edit the alpha, beta, gamma for a better segmentation results  ')
+        self.msg.exec()
+    '''        
+    def otherWindowSaveDicom(self):
+       self.EditDicom = EditDicomWindow()
+       self.EditDicom.show()
+    '''         
     # Activates when the user start press and moving the mouse to draw the contours
     def drawMove(self, e):
-        if(self.countCoords > 2 ):
+        if(self.countCoords > 3 ):
             self.msg.setWindowTitle("Warning")
             self.msg.setInformativeText('3 segmented objects needed!')
             self.msg.exec()
@@ -291,6 +351,9 @@ class Ui_Dialog(object):
             if(self.countCoords == 2):
                 self.listOfCoords3.append([self.last_x,self.last_y])    
             
+            if(self.countCoords == 3):
+                self.listOfCoords4.append([self.last_x,self.last_y])    
+            
             # release mouse 
             self.imageTest.mouseReleaseEvent = self.release
          
@@ -310,16 +373,17 @@ class Ui_Dialog(object):
         self.last_x = None
         self.last_y = None
         self.countCoords += 1
-        if (self.countCoords == 3):
+        if (self.countCoords == 4):
             # list of coords to numpy array 
             self.ss1 = np.array(self.listOfCoords1)
             self.ss2 = np.array(self.listOfCoords2)
             self.ss3 = np.array(self.listOfCoords3)
+            self.ss4 = np.array(self.listOfCoords4)
             self.Segment_bott.setEnabled(True)
         
     # this function activates when the user press JPG button, which saves the two images     
     def savePNG(self):     
-        self.path = './Dicom_Slices'
+        self.path = './Dicom_JPG'
         # Save Dicom MRI image to file 
         cv2.imwrite(os.path.join(self.path,'testImage{0}.jpg'.format(self.dataset.InstanceNumber)), self.image_2d_scaled) 
         cv2.imwrite(os.path.join(self.path,'segmentedImg{0}.jpg'.format(self.dataset.InstanceNumber)), self.img) 
@@ -328,32 +392,15 @@ class Ui_Dialog(object):
         self.msg.setInformativeText('Images has been Saved.')
         self.msg.exec()
                
-           
-    # this function used to plot the labeled image, not used in the gui currently  
-    def plotLabeledImg(self):
-        # normalize the labeled image
-        self.qImg = self.pixmap.toImage()
-        
-        self.labeledImg = qimage2ndarray.recarray_view(self.qImg)
-        self.threshold = 500 # Adjust as needed
-        
 
-        
-        plt.plot(self.ss1[:,0],self.ss1[:,1],'r')
-        plt.plot(self.ss2[:,0],self.ss2[:,1],'r')
-
-        plt.plot(self.ss3[:,0],self.ss3[:,1],'r')
-
-        self.img = np.zeros((308, 384), dtype=np.uint8)
-        set_color(self.imginit, (self.ss1[:,1],self.ss1[:,0]), 1)
-        plt.imshow(self.imginit)
-        plt.show()
-     
     # Activate when the user press 'segment' button    
     def active_contour(self):
         
         # enable saving the image button 
         self.cnvJPG.setEnabled(True)
+        
+        # enable plt 3D button 
+        self.plt3D.setEnabled(True)
         
         # clear the label each time the user press segment, to not store alot above each other 
         self.segmetLabel.clear()
@@ -362,15 +409,24 @@ class Ui_Dialog(object):
         # convert to gray scale image 
         self.img = rgb2gray(self.image_2d_scaled.copy())
         
-        #  values of alpha, beta, gamma, that active contour function requires 
+        # #  values of alpha, beta, gamma, that active contour function requires 
+        # alpha=self.alpha.toPlainText()
+        # print(alpha)
+        # beta=self.beta.toPlainText()
+        # print(beta)
+        # gamma=self.gama.toPlainText()
+        # print(gamma)
+        
         alpha=self.alpha.value()
         beta=self.beta.value()
         gamma=self.gama.value()
-        
+
         # Convert coordinates to numpy array
         init1 = np.array([self.ss1[:,0],self.ss1[:,1]]).T
         init2 = np.array([self.ss2[:,0],self.ss2[:,1]]).T
         init3 = np.array([self.ss3[:,0],self.ss3[:,1]]).T
+        init4 = np.array([self.ss4[:,0],self.ss4[:,1]]).T
+
 
         # Apply the Active Contour functions on our 3 contours 
         snake1 = active_contour(gaussian(self.img, 3),
@@ -384,37 +440,67 @@ class Ui_Dialog(object):
         snake3 = active_contour(gaussian(self.img, 3),
                                 init3, alpha, beta,gamma,max_iterations=2500,  
                                 coordinates='rc')
+        snake4 = active_contour(gaussian(self.img, 3),
+                                init4, alpha, beta,gamma,max_iterations=2500,  
+                                coordinates='rc')
+
+        # x,y,z for 3D plotting 
+        self.x1 = snake1[:,0] 
+        self.y1 = snake1[:,1] 
+        self.x2 = snake2[:,0] 
+        self.y2 = snake2[:,1] 
+        self.x3 = snake3[:,0] 
+        self.y3 = snake3[:,1] 
+        self.x4 = snake4[:,0] 
+        self.y4 = snake3[:,1]
+        self.z = np.ones(snake1.shape[0]) * 5
+                
         
-        '''
-        fig, ax = plt.subplots(figsize=(7, 7))
-        ax.imshow(img, cmap=plt.cm.gray)
-        ax.plot(init1[:, 0], init1[:, 1], '-r', lw=3)
-        ax.plot(snake1[:,,0 0], snake1[:, 1], '-b', lw=3)
-        ax.plot(init2[:, 0], init2[:, 1], '-r', lw=3)
-        ax.plot(snake2[:, 0], snake2[:, 1], '-b', lw=3)
-        ax.plot(init3[:, 0], init3[:, 1], '-r', lw=3)
-        ax.plot(snake3[:, 0], snake3[:, 1], '-b', lw=3)
-        ax.set_xticks([]), ax.set_yticks([])
-        ax.axis([0, img.shape[1], img.shape[0], 0])
-        '''
-        
-        #Segment the snakes and edit on the image 
+       
+        # draw the Segmentation results the snakes and edit on the image 
         cv2.fillConvexPoly(self.img,np.array(snake1,'int32'),(180, 0, 0))
         cv2.fillConvexPoly(self.img,np.array(snake2,'int32'),(100, 0, 50))
         cv2.fillConvexPoly(self.img,np.array(snake3,'int32'),(250, 15, 0))
+        cv2.fillConvexPoly(self.img,np.array(snake4,'int32'),(250, 15, 0))
+
 
         
         self.segmentedImg = qimage2ndarray.array2qimage(self.img)
         self.pixmap2 = QtGui.QPixmap(self.segmentedImg)    
         self.segmetLabel.setPixmap(self.pixmap2.scaled(self.imageTest.width(),self.imageTest.height()))
+    
+    def draw3D(self):
+        fig = plt.figure()
+        ax = fig.gca(projection='3d')
+        ax.plot_trisurf(self.x, self.y, self.z, cmap = cm.jet)
+        #ax.plot_trisurf(self.x1, self.y1, self.z, cmap = cm.cool)
+        # rotate the axes and update
+        for angle in range(0, 360):
+            ax.view_init(30, angle)
+            plt.draw()
+            plt.pause(.001)
+        
+    def Anonymize(self):
         
     
+        data_elements = ['PatientID',
+                         'PatientName'
+                         'PatientBirthDate']
+        for de in data_elements:
+            print(self.dataset.data_element(de))
+        self.dataset.PatientName = '' 
+        self.dataset.PatientID = '' 
+        self.dataset.PatientBirthDate = '' 
+        self.dataset.save_as('./DICOM_Anony/Dicom_Slice{0}.dcm'.format(self.dataset.InstanceNumber))
+        # this function used to plot the labeled image, not used in the gui currently  
+        self.msg.setWindowTitle("Save TAnonymized ")
+        self.msg.setInformativeText('Dicom file has been Saved.')
+        self.msg.exec()
     
-    
-                        
-                
 
-        
+    
+    
+
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
@@ -425,23 +511,3 @@ if __name__ == "__main__":
     Dialog.update()
     sys.exit(app.exec_())
     
-    
-    
-    '''
-            #plt.imshow(self.imginit)
-            
-            #plt.plot(ss1[:,0],ss1[:,1],'r')
-            #plt.plot(ss2[:,0],ss2[:,1],'r')
-            #plt.plot(ss3[:,0],ss3[:,1],'r')
-            
-            #poly1 = Polygon([p[0],p[1]] for p in self.ss1)
-            #self.x1,self.y1 = poly1.convex_hull.exterior.coords.xy
-            
-            #poly2 = Polygon([p[0],p[1]] for p in self.ss2)
-            #self.x2,self.y2 = poly2.convex_hull.exterior.coords.xy
-            
-            #poly3 = Polygon([p[0],p[1]] for p in self.ss3)
-            #self.x3,self.y3 = poly3.convex_hull.exterior.coords.xy
-            
-    
-    '''
