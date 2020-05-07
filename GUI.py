@@ -386,7 +386,11 @@ class Ui_Dialog(object):
         self.path = './Dicom_JPG'
         # Save Dicom MRI image to file 
         cv2.imwrite(os.path.join(self.path,'testImage{0}.jpg'.format(self.dataset.InstanceNumber)), self.image_2d_scaled) 
+        # same Dicom mri image with segmentation above it
         cv2.imwrite(os.path.join(self.path,'segmentedImg{0}.jpg'.format(self.dataset.InstanceNumber)), self.img) 
+        # same only the segmented objects, masks
+        cv2.imwrite(os.path.join(self.path,'Mask{0}.jpg'.format(self.dataset.InstanceNumber)), self.maskImg) 
+
         # pop up message to check image is saved
         self.msg.setWindowTitle("Save To JPG ")
         self.msg.setInformativeText('Images has been Saved.')
@@ -469,9 +473,15 @@ class Ui_Dialog(object):
         cv2.fillConvexPoly(self.img,np.array(snake3,'int32'),(250, 15, 0))
         cv2.fillConvexPoly(self.img,np.array(snake4,'int32'),(250, 15, 0))
 
+        self.maskImg = np.zeros(self.img.shape)
+        
+        cv2.fillConvexPoly(self.maskImg,np.array(snake1,'int32'),(180, 0, 0))
+        cv2.fillConvexPoly(self.maskImg,np.array(snake2,'int32'),(100, 0, 50))
+        cv2.fillConvexPoly(self.maskImg,np.array(snake3,'int32'),(250, 15, 0))
+        cv2.fillConvexPoly(self.maskImg,np.array(snake4,'int32'),(250, 15, 0))
 
         
-        self.segmentedImg = qimage2ndarray.array2qimage(self.img)
+        self.segmentedImg = qimage2ndarray.array2qimage(self.maskImg)
         self.pixmap2 = QtGui.QPixmap(self.segmentedImg)    
         self.segmetLabel.setPixmap(self.pixmap2.scaled(self.imageTest.width(),self.imageTest.height()))
     
@@ -490,6 +500,8 @@ class Ui_Dialog(object):
             plt.pause(.001)
             plt.show()
         # rotate the axes and update
+
+        fig.savefig('./3D_Plots/Plot3D{0}.png'.format(self.dataset.InstanceNumber))
 
     # Edit patient information and save to a Dicom file in folder DICOM_Anony     
     def Anonymize(self):
