@@ -6,6 +6,9 @@
 #
 # WARNING! All changes made in this file will be lost!
 
+# needed libraries to install : 
+# pyqt5, matplotlib, pydicom, qimage2ndarray, 
+# skimage, cv2, os, pandas  
 #...........................Imported libraries..................
 from PyQt5 import QtCore, QtGui, QtWidgets
 import matplotlib.pyplot as plt
@@ -15,7 +18,6 @@ from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFil
 from pydicom.data import get_testdata_files,get_testdata_file
 import qimage2ndarray
 import  numpy as np
-import qwt
 from skimage.color import lab2rgb, lch2lab, rgb2gray
 #from pydicom.pixel_data_handlers.util import apply_voi_lut
 import  cv2
@@ -24,7 +26,7 @@ from PyQt5.QtWidgets import QMessageBox, QDialogButtonBox
 #from numpy.lib import recfunctions as rfn
 import  pandas as pd
 from skimage.draw import polygon, line, set_color
-import  PIL.Image as imgCnv
+#import  PIL.Image as imgCnv
 from pydicom.dataset import Dataset, FileDataset
 # lib to draw 3D
 from mpl_toolkits.mplot3d import Axes3D
